@@ -10,12 +10,13 @@ const {
 
 const authMiddleware = require("../middlewares/auth.middleware");
 
-router.use(authMiddleware);
-
-router.post("/", createProduct); // Crear producto
+// 🟢 Rutas públicas
 router.get("/", getProducts); // Obtener todos
 router.get("/:id", getProductById); // Obtener uno
-router.put("/:id", updateProduct); // Actualizar
-router.delete("/:id", deleteProduct); // Eliminar
+
+// 🔒 Rutas protegidas con token
+router.post("/", authMiddleware, createProduct); // Crear producto
+router.put("/:id", authMiddleware, updateProduct); // Actualizar
+router.delete("/:id", authMiddleware, deleteProduct); // Eliminar
 
 module.exports = router;
