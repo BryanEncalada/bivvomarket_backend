@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require('cors');
 const app = express();
 require("dotenv").config();
 
@@ -7,14 +8,19 @@ const connectDB = require("./config/db");
 // Conectarse a MongoDB
 connectDB();
 
+// Permitir CORS desde cualquier origen (en desarrollo está bien)
+app.use(cors())
+
 // Middleware para leer JSON
-app.use(express.json());
+app.use(
+  express.json()
+);
 
 // Rutas de productos
 const productRoutes = require("./routes/product.routes");
 app.use("/api/products", productRoutes);
 
-const authRoutes = require("./routes/auth.routes");
+const authRoutes = require("./routes/auth.routes"); 
 app.use("/api/auth", authRoutes);
 
 // Ruta de prueba
