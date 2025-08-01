@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  nombre: { type: String, required: false },
+  apellido: { type: String, required: false },
+  rol: { type: Number, required: false },
 });
 
 // Encriptar la contraseña antes de guardar
