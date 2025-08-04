@@ -13,9 +13,54 @@ const createProduct = async (req, res) => {
 
 // Obtener todos los productos
 const getProducts = async (req, res) => {
+  const {
+    sort,
+    category,
+    subcategory,
+    brand,
+    size,
+    color,
+    minPrice,
+    maxPrice,
+  } = req.query;
+
+  let filter = {};
+  let sortOptions = {};
+
+  if (category) filter.parentCategory = category;
+  if (subcategory) filter.category = subcategory;
+  if (brand) filter.brand = brand;
+  if (size) filter.sizes = size;
+  if (color) filter.color = color;
+  if (minPrice || maxPrice) {
+    filter.price = {};
+    if (minPrice) filter.price.$gte = Number(minPrice);
+    if (maxPrice) filter.price.$lte = Number(maxPrice);
+  }
+
+  switch (sort) {
+    case "price_asc":
+      sortOptions = { price: 1 };
+      break;
+    case "price_desc":
+      sortOptions = { price: -1 };
+      break;
+    case "id_asc":
+      sortOptions = { _id: 1 };
+      break;
+    case "id_desc":
+      sortOptions = { _id: -1 };
+      break;
+    case "discount":
+      filter.discount = { $gt: 0 };
+      break;
+    default:
+      sortOptions = {};
+  }
+
   try {
-    const productos = await Product.find();
-    res.json(productos);
+    const products = await Product.find(filter).sort(sortOptions);
+    res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
