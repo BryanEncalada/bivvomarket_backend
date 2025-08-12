@@ -1,8 +1,10 @@
 const Product = require("../models/Product");
+const log = require('../logs');
 
 // Crear producto
 const createProduct = async (req, res) => {
   try {
+
     const newProduct = new Product(req.body);
     await newProduct.save();
     res.status(201).json({ mensaje: "Producto creado", producto: newProduct });
@@ -59,9 +61,13 @@ const getProducts = async (req, res) => {
   }
 
   try {
+
     const products = await Product.find(filter).sort(sortOptions);
     res.json(products);
   } catch (error) {
+
+    log(error);
+
     res.status(500).json({ error: error.message });
   }
 };
@@ -74,6 +80,7 @@ const getProductById = async (req, res) => {
       return res.status(404).json({ mensaje: "Producto no encontrado" });
     res.json(producto);
   } catch (error) {
+    log(error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -82,7 +89,7 @@ const getProductById = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const producto = await Product.findOneAndUpdate(
-      { id: req.params.id },
+      { _id: req.params.id },
       req.body,
       { new: true }
     );
@@ -90,6 +97,7 @@ const updateProduct = async (req, res) => {
       return res.status(404).json({ mensaje: "Producto no encontrado" });
     res.json({ mensaje: "Producto actualizado", producto });
   } catch (error) {
+    log(error);
     res.status(500).json({ error: error.message });
   }
 };
