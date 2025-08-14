@@ -1,27 +1,28 @@
-const mongoose = require("mongoose");
-require("dotenv").config();
-const log = require('../logs');
+const { Sequelize } = require("sequelize");
+
+
+//BD - USR -PWD
+const sequelize = new Sequelize('enervymc_bivvo', 'enervymc_bivvo', 'xvVDTkEF7nET3f7zry4U', {
+
+    host:'201.148.107.153',
+    dialect:'mysql'
+});
+
+
 
 const connectDB = async () => {
-  try {
+   sequelize.authenticate().then(
+        () => {
 
-    mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // Tiempo para intentar conectar
-      socketTimeoutMS: 45000,          // Timeout en sockets
-      family: 4,                       // IPv4 para evitar problemas IPv6
-      tls: true                       // Asegura conexión segura (TLS)
-    });
+            console.log("Se conecto");
+        }
+    ).catch(
+        () => {
 
+            console.log("No se conecto");
+        }
 
-    console.log("✅ Conectado a MongoDB Atlas");
-    log("Conexión exitosa a MongoDB Atlas");
-  } catch (err) {
-    console.error("❌ Error al conectar a MongoDB:", err.message);
-    log(`Error al conectar a MongoDB: ${err.message}`);
-    process.exit(1);
-  }
+    );
 };
 
-module.exports = connectDB;
+module.exports = { connectDB, sequelize }; ;

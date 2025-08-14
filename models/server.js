@@ -1,8 +1,13 @@
 const express = require('express')
 const cors = require('cors');
-const connectDB = require("../config/db");
+const { connectDB } = require("../config/db");
 const morgan = require('morgan');
 const log = require('../logs');
+
+const { productoSchema } = require("../models/Product");
+const { ProductoImagenSchema } = require("../models/productoImagen");
+const { ProductoDetalleListaChema } = require("../models/productoDetalleLista");
+const { ProductoTallaChema } = require("../models/productoTalla");
 
 class Server {
 
@@ -43,6 +48,17 @@ class Server {
 
     async concetarBD() {
         await connectDB();
+
+
+        productoSchema.hasMany(ProductoImagenSchema, { foreignKey: 'producto_id', as: 'imagenes' });
+        ProductoImagenSchema.belongsTo(productoSchema, { foreignKey: 'producto_id', as: 'producto' });
+
+        productoSchema.hasMany(ProductoTallaChema, { foreignKey: 'producto_id', as: 'tallas' });
+        ProductoTallaChema.belongsTo(productoSchema, { foreignKey: 'producto_id', as: 'producto' });
+
+        productoSchema.hasMany(ProductoDetalleListaChema, { foreignKey: 'producto_id', as: 'detallesLista' });
+        ProductoDetalleListaChema.belongsTo(productoSchema, { foreignKey: 'producto_id', as: 'producto' });
+
     }
 
 

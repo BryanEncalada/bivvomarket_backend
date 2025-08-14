@@ -1,4 +1,9 @@
-const Product = require("../models/Product");
+const { productoSchema } = require("../models/Product");
+const { ProductoImagenSchema } = require("../models/productoImagen");
+const {ProductoTallaChema} = require("../models/productoTalla");
+const {ProductoDetalleListaChema} = require("../models/productoDetalleLista");
+const { Op } = require("sequelize");
+
 const log = require('../logs');
 
 // Crear producto
@@ -13,6 +18,7 @@ const createProduct = async (req, res) => {
   }
 };
 
+// 
 // Obtener todos los productos
 const getProducts = async (req, res) => {
   const {
@@ -21,53 +27,67 @@ const getProducts = async (req, res) => {
     subcategory,
     brand,
     size,
-    color,
+    color, // Ojo: tu tabla no tiene 'color', habría que añadirlo si es necesario
     minPrice,
     maxPrice,
   } = req.query;
 
-  let filter = {};
-  let sortOptions = {};
+  let where = {};
+  let order = [];
 
-  if (category) filter.parentCategory = category;
-  if (subcategory) filter.category = subcategory;
-  if (brand) filter.brand = brand;
-  if (size) filter.sizes = size;
-  if (color) filter.color = color;
+  // Filtros
+  if (category) where.parent_category = category;
+  if (subcategory) where.category = subcategory;
+  if (brand) where.brand = brand;
+  if (size) {
+    // Filtrando por talla usando relación con producto_tallas
+    where["$ProductoTallas.talla$"] = size;
+  }
+  if (color) {
+    // Si la tabla productos tuviera color
+    where.color = color;
+  }
   if (minPrice || maxPrice) {
-    filter.price = {};
-    if (minPrice) filter.price.$gte = Number(minPrice);
-    if (maxPrice) filter.price.$lte = Number(maxPrice);
+    where.precio = {};
+    if (minPrice) where.precio[Op.gte] = Number(minPrice);
+    if (maxPrice) where.precio[Op.lte] = Number(maxPrice);
   }
 
+  // Ordenamiento
   switch (sort) {
     case "price_asc":
-      sortOptions = { price: 1 };
+      order = [["precio", "ASC"]];
       break;
     case "price_desc":
-      sortOptions = { price: -1 };
+      order = [["precio", "DESC"]];
       break;
     case "id_asc":
-      sortOptions = { _id: 1 };
+      order = [["id", "ASC"]];
       break;
     case "id_desc":
-      sortOptions = { _id: -1 };
+      order = [["id", "DESC"]];
       break;
     case "discount":
-      filter.discount = { $gt: 0 };
+      where.descuento = { [Op.gt]: 0 };
       break;
     default:
-      sortOptions = {};
+      order = [];
   }
 
   try {
+    const products = await productoSchema.findAll({
+      where,
+      include: [
+        { model: ProductoImagenSchema, as: 'imagenes' },
+        { model: ProductoTallaChema, as: 'tallas' },
+        { model: ProductoDetalleListaChema, as: 'detallesLista' }
+      ],
+      order,
+    });
 
-    const products = await Product.find(filter).sort(sortOptions);
     res.json(products);
   } catch (error) {
-
-    log(error);
-
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };

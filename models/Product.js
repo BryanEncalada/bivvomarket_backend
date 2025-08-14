@@ -1,28 +1,80 @@
-const mongoose = require("mongoose");
+const { sequelize } = require('../config/db');
 
-const productSchema = new mongoose.Schema({
-  img: { type: String, required: true },
-  new: { type: Boolean, default: false },
-  price: { type: Number, required: true },
-  old_price: { type: Number, required: true },
-  discount: { type: Number, required: true },
-  status: String,
-  quantity: { type: Number, required: true },
-  related_images: [String],
-  orderQuantity: Number,
-  sizes: [String],
-  weight: Number,
-  thumb_img: { type: String, required: true },
-  sm_desc: { type: String, required: true },
-  parentCategory: { type: String, required: true },
-  category: { type: String, required: true },
-  brand: { type: String, required: true },
-  title: { type: String, required: true },
-  details: {
-    details_text: { type: String },
-    details_list: [String],
-    details_text_2: { type: String },
+const productoSchema = sequelize.define('Producto', {
+  id: {
+    type: sequelize.Sequelize.CHAR(24),
+    primaryKey: true
   },
+  img: {
+    type: sequelize.Sequelize.STRING,
+    allowNull: false
+  },
+  nuevo: {
+    type: sequelize.Sequelize.BOOLEAN,
+    allowNull: false
+  },
+  precio: {
+    type: sequelize.Sequelize.DECIMAL(10, 2),
+    allowNull: false
+  },
+  precio_anterior: {
+    type: sequelize.Sequelize.DECIMAL(10, 2),
+    defaultValue: 0
+  },
+  descuento: {
+    type: sequelize.Sequelize.INTEGER,
+    defaultValue: 0
+  },
+  estado: {
+    type: sequelize.Sequelize.STRING(50),
+    defaultValue: 'Disponible'
+  },
+  cantidad: {
+    type: sequelize.Sequelize.INTEGER,
+    defaultValue: 0
+  },
+  order_quantity: {
+    type: sequelize.Sequelize.INTEGER,
+    defaultValue: 0
+  },
+  peso: {
+    type: sequelize.Sequelize.DECIMAL(10, 2),
+    defaultValue: 0
+  },
+  thumb_img: {
+    type: sequelize.Sequelize.STRING
+  },
+  sm_desc: {
+    type: sequelize.Sequelize.TEXT
+  },
+  parent_category: {
+    type: sequelize.Sequelize.STRING(100)
+  },
+  category: {
+    type: sequelize.Sequelize.STRING(100)
+  },
+  brand: {
+    type: sequelize.Sequelize.STRING(100)
+  },
+  title: {
+    type: sequelize.Sequelize.STRING(255),
+    allowNull: false
+  },
+  details_text: {
+    type: sequelize.Sequelize.TEXT
+  },
+  details_text_2: {
+    type: sequelize.Sequelize.TEXT
+  }
+}, {
+  tableName: 'productos',
+  timestamps: false
 });
 
-module.exports = mongoose.model("Product", productSchema);
+// productoSchema.associate = models => {
+//   Producto.hasMany(models.ProductoImagen, { foreignKey: 'producto_id', as: 'imagenes' });
+//   Producto.hasMany(models.ProductoTalla, { foreignKey: 'producto_id', as: 'tallas' });
+//   Producto.hasMany(models.ProductoDetalleLista, { foreignKey: 'producto_id', as: 'detallesLista' });
+// };
+
+module.exports = { productoSchema };
