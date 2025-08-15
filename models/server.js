@@ -36,7 +36,11 @@ class Server {
 
         // CORS
         // Lista de orígenes permitidos
-        this.app.use(cors());
+        this.app.use(cors({
+            origin: '*',          // Permite cualquier origen
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos permitidos
+            allowedHeaders: ['Content-Type', 'Authorization'] // Headers permitidos
+        }));
 
         // Lectura y parseo del body
         this.app.use(express.json());
