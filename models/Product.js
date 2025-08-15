@@ -1,45 +1,54 @@
 const { sequelize } = require('../config/db');
 
 const productoSchema = sequelize.define('Producto', {
-  id: {
+  _id: {
     type: sequelize.Sequelize.CHAR(24),
-    primaryKey: true
+    primaryKey: true,
+    field: 'id'
   },
   img: {
     type: sequelize.Sequelize.STRING,
     allowNull: false
   },
-  nuevo: {
+  new: {
     type: sequelize.Sequelize.BOOLEAN,
-    allowNull: false
+    allowNull: false,
+    field: 'nuevo'
   },
-  precio: {
-    type: sequelize.Sequelize.DECIMAL(10, 2),
-    allowNull: false
+  price: {
+    type: sequelize.Sequelize.DECIMAL,
+    allowNull: false,
+    defaultValue: 0,
+    field: 'precio'
   },
-  precio_anterior: {
-    type: sequelize.Sequelize.DECIMAL(10, 2),
-    defaultValue: 0
+  old_price: {
+    type: sequelize.Sequelize.DECIMAL,
+    defaultValue: 0,
+    field: 'precio_anterior'
   },
-  descuento: {
+  discount: {
     type: sequelize.Sequelize.INTEGER,
-    defaultValue: 0
+    defaultValue: 0,
+    field: 'descuento'
   },
-  estado: {
+  status: {
     type: sequelize.Sequelize.STRING(50),
-    defaultValue: 'Disponible'
+    defaultValue: 'Disponible',
+    field:'estado'
   },
-  cantidad: {
+  quantity: {
     type: sequelize.Sequelize.INTEGER,
-    defaultValue: 0
+    defaultValue: 0,
+    field: 'cantidad'
   },
   order_quantity: {
     type: sequelize.Sequelize.INTEGER,
     defaultValue: 0
   },
-  peso: {
-    type: sequelize.Sequelize.DECIMAL(10, 2),
-    defaultValue: 0
+  weight: {
+    type: sequelize.Sequelize.DECIMAL,
+    defaultValue: 0,
+    field: 'peso'
   },
   thumb_img: {
     type: sequelize.Sequelize.STRING

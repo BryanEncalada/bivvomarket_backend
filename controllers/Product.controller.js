@@ -1,7 +1,7 @@
 const { productoSchema } = require("../models/Product");
 const { ProductoImagenSchema } = require("../models/productoImagen");
-const {ProductoTallaChema} = require("../models/productoTalla");
-const {ProductoDetalleListaChema} = require("../models/productoDetalleLista");
+const { ProductoTallaChema } = require("../models/productoTalla");
+const { ProductoDetalleListaChema } = require("../models/productoDetalleLista");
 const { Op } = require("sequelize");
 
 const log = require('../logs');
@@ -85,7 +85,16 @@ const getProducts = async (req, res) => {
       order,
     });
 
-    res.json(products);
+    const response = products.map(producto => {
+      const p = producto.toJSON(); // convierte instancia a objeto plano
+      p.price = parseFloat(p.price);
+      p.old_price = parseFloat(p.old_price);
+      p.weight = parseFloat(p.weight);
+      return p;
+    });
+
+    res.json(response);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -95,12 +104,23 @@ const getProducts = async (req, res) => {
 // Obtener producto por ID
 const getProductById = async (req, res) => {
   try {
-    const producto = await Product.findById(req.params.id);
-    if (!producto)
+    const { id } = req.params;
+
+    const producto = await productoSchema.findByPk(id, {
+      include: [
+        { model: ProductoImagenSchema, as: 'imagenes' },
+        { model: ProductoTallaChema, as: 'tallas' },
+        { model: ProductoDetalleListaChema, as: 'detallesLista' }
+      ]
+    });
+
+    if (!producto) {
       return res.status(404).json({ mensaje: "Producto no encontrado" });
+    }
+
     res.json(producto);
   } catch (error) {
-    log(error);
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };

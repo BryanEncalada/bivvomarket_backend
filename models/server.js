@@ -35,6 +35,7 @@ class Server {
         this.app.use(morgan('dev'));
 
         // CORS
+        // Lista de orígenes permitidos
         this.app.use(cors());
 
         // Lectura y parseo del body
