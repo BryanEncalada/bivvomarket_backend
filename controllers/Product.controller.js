@@ -3,22 +3,90 @@ const { ProductoImagenSchema } = require("../models/productoImagen");
 const { ProductoTallaChema } = require("../models/productoTalla");
 const { ProductoDetalleListaChema } = require("../models/productoDetalleLista");
 const { Op } = require("sequelize");
+const { sequelize } = require('../config/db');
 
 const log = require('../logs');
+const crypto = require("crypto"); 
 
+function objectIdLike() {
+  return crypto.randomBytes(12).toString("hex");
+}
+
+//------------------------------------------------------------------------------------
 // Crear producto
+// Insertar producto
 const createProduct = async (req, res) => {
-  try {
+  const t = await sequelize.transaction();
 
-    const newProduct = new Product(req.body);
-    await newProduct.save();
-    res.status(201).json({ mensaje: "Producto creado", producto: newProduct });
+  let data = req.body;
+
+  // Si el producto tiene _id = 0 → genera uno nuevo
+  if (!data._id || data._id === "0" || data._id === 0) {
+    data._id = objectIdLike();
+  }
+
+  try {
+    // Paso 1: crear el producto principal
+    const producto = await productoSchema.create(req.body, { transaction: t });
+
+    // Paso 2: insertar imágenes si existen
+    if (req.body.imagenes && req.body.imagenes.length > 0) {
+      await ProductoImagenSchema.bulkCreate(
+        req.body.imagenes.map(img => ({
+          ...img,
+          producto_id: producto._id
+        })),
+        { transaction: t }
+      );
+    }
+
+    // Paso 3: insertar detalles si existen
+    if (req.body.detallesLista && req.body.detallesLista.length > 0) {
+      await ProductoDetalleListaChema.bulkCreate(
+        req.body.detallesLista.map(d => ({
+          detalle: d,
+          producto_id: producto._id
+        })),
+        { transaction: t }
+      );
+    }
+
+    // Paso 4: insertar tallas si existen
+    if (req.body.tallas && req.body.tallas.length > 0) {
+      await ProductoTallaChema.bulkCreate(
+        req.body.tallas.map(d => ({
+          talla: d,
+          producto_id: producto._id
+        })),
+        { transaction: t }
+      );
+    }
+
+    // Confirmar transacción
+    await t.commit();
+
+    // Traer el producto con las relaciones creadas
+    const productoCreado = await productoSchema.findByPk(producto._id, {
+      include: [
+        { model: ProductoImagenSchema, as: 'imagenes' },
+        { model: ProductoTallaChema, as: 'tallas' },
+        { model: ProductoDetalleListaChema, as: 'detallesLista' }
+      ]
+    });
+
+    res.status(201).json({
+      mensaje: "Producto creado",
+      producto: productoCreado
+    });
+
   } catch (error) {
+    await t.rollback();
     res.status(500).json({ error: error.message });
   }
 };
 
-// 
+
+//------------------------------------------------------------------------------------
 // Obtener todos los productos
 const getProducts = async (req, res) => {
   const {
@@ -101,6 +169,7 @@ const getProducts = async (req, res) => {
   }
 };
 
+//------------------------------------------------------------------------------------
 // Obtener producto por ID
 const getProductById = async (req, res) => {
   try {
@@ -125,41 +194,172 @@ const getProductById = async (req, res) => {
   }
 };
 
+//------------------------------------------------------------------------------------
 // Actualizar producto
 const updateProduct = async (req, res) => {
+
+  const t = await sequelize.transaction();
+
   try {
-    const producto = await Product.findOneAndUpdate(
-      { _id: req.params.id },
-      req.body,
-      { new: true }
-    );
-    if (!producto)
+
+    // Paso 1: buscar el producto
+    const producto = await productoSchema.findByPk(req.params.id);
+
+    //console.log('productoUpdate', producto);
+
+    if (!producto) {
       return res.status(404).json({ mensaje: "Producto no encontrado" });
-    res.json({ mensaje: "Producto actualizado", producto });
+    }
+
+    // Paso 2: actualizar y obtener el registro actualizado
+    await producto.update(req.body, { transaction: t });
+
+    if (req.body.imagenes) {
+
+
+
+      // 1. Eliminar las imágenes antiguas
+      await ProductoImagenSchema.destroy({ where: { producto_id: producto._id }, transaction: t });
+
+      // 2. Crear las nuevas imágenes
+      await ProductoImagenSchema.bulkCreate(
+        req.body.imagenes.map(img => ({ ...img, producto_id: producto._id })), { transaction: t });
+
+    }
+
+    if (req.body.detallesLista) {
+
+
+      // 1. Eliminar los detalles
+      await ProductoDetalleListaChema.destroy({ where: { producto_id: producto._id }, transaction: t });
+
+      // 2. Crear los nuevos detalles
+      await ProductoDetalleListaChema.bulkCreate(
+        req.body.detallesLista.map(d => ({ detalle: d, producto_id: producto._id })), { transaction: t });
+
+    }
+
+
+    if (req.body.tallas) {
+
+
+      // 1. Eliminar los detalles
+      await ProductoTallaChema.destroy({ where: { producto_id: producto._id }, transaction: t });
+
+      // 2. Crear los nuevos detalles
+      await ProductoTallaChema.bulkCreate(
+        req.body.tallas.map(d => ({ talla: d, producto_id: producto._id })), { transaction: t });
+
+    }
+
+    // Confirmar transacción
+    await t.commit();
+
+    // Devolver producto con relaciones actualizadas
+    const productoActualizado = await productoSchema.findByPk(producto._id, {
+      include: [
+        { model: ProductoImagenSchema, as: 'imagenes' },
+        { model: ProductoTallaChema, as: 'tallas' },
+        { model: ProductoDetalleListaChema, as: 'detallesLista' }
+      ]
+    });
+
+    res.json({ mensaje: "Producto actualizado", producto: productoActualizado });
+
   } catch (error) {
     log(error);
+    await t.rollback();
     res.status(500).json({ error: error.message });
   }
 };
 
+//------------------------------------------------------------------------------------
 // Eliminar producto
 const deleteProduct = async (req, res) => {
   try {
-    const producto = await Product.findOneAndDelete({ id: req.params.id });
-    if (!producto)
+    const producto = await productoSchema.findByPk(req.params.id);
+
+    if (!producto) {
       return res.status(404).json({ mensaje: "Producto no encontrado" });
+    }
+
+    // Borrar hijos primero
+    await ProductoImagenSchema.destroy({ where: { producto_id: producto._id } });
+    await ProductoTallaChema.destroy({ where: { producto_id: producto._id } });
+    await ProductoDetalleListaChema.destroy({ where: { producto_id: producto._id } });
+
+    // Luego borrar el producto
+    await producto.destroy();
+
+
+
     res.json({ mensaje: "Producto eliminado" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
+//------------------------------------------------------------------------------------
 const deleteAllProducts = async (req, res) => {
   try {
     await Product.deleteMany({});
     res.json({ message: "Todos los productos fueron eliminados." });
   } catch (error) {
     res.status(500).json({ error: "Error al eliminar productos." });
+  }
+};
+
+//------------------------------------------------------------------------------------
+// Actualizar producto
+const cambiarEstado = async (req, res) => {
+
+  const t = await sequelize.transaction();
+
+  try {
+
+    // Paso 1: buscar el producto
+    const producto = await productoSchema.findByPk(req.params.id);
+
+    //console.log('productoUpdate', producto);
+
+    if (!producto) {
+      return res.status(404).json({ mensaje: "Producto no encontrado" });
+    }
+
+    let estado = ''
+    if (producto.status == 'Disponible') {
+      estado = 'Inactivo';
+    }
+    else {
+      estado = 'Disponible';
+    }
+
+    // Paso 2: actualizar y obtener el registro actualizado
+    await producto.update(
+      { status: estado },
+      { transaction: t }
+
+    );
+
+
+    // Confirmar transacción
+    await t.commit();
+
+    // Devolver producto con relaciones actualizadas
+    const productoActualizado = await productoSchema.findByPk(producto._id, {
+      include: [
+        { model: ProductoImagenSchema, as: 'imagenes' },
+        { model: ProductoTallaChema, as: 'tallas' },
+        { model: ProductoDetalleListaChema, as: 'detallesLista' }
+      ]
+    });
+
+    res.json({ mensaje: "Producto actualizado", producto: productoActualizado });
+
+  } catch (error) {
+    log(error);
+    await t.rollback();
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -170,4 +370,5 @@ module.exports = {
   updateProduct,
   deleteProduct,
   deleteAllProducts,
+  cambiarEstado
 };

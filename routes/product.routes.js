@@ -7,6 +7,7 @@ const {
   updateProduct,
   deleteProduct,
   deleteAllProducts,
+  cambiarEstado,
 } = require("../controllers/Product.controller");
 
 const authMiddleware = require("../middlewares/auth.middleware");
@@ -19,6 +20,7 @@ router.delete("/all", deleteAllProducts);
 // 🔒 Rutas protegidas con token
 router.post("/", authMiddleware, createProduct); // Crear producto
 router.put("/:id", authMiddleware, updateProduct); // Actualizar
+router.put("/estado/:id", authMiddleware, cambiarEstado); // Actualizar
 router.delete("/:id", authMiddleware, deleteProduct); // Eliminar
 
 module.exports = router;

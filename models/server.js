@@ -17,6 +17,7 @@ class Server {
         this.ProductoPatch = '/api/products';
         this.categoriaPatch = '/api/categories';
         this.UsuariosPatch = '/api/auth';
+        this.FtpPatch = '/api/ftp';
 
         // ConectarBD
         this.concetarBD();
@@ -73,7 +74,7 @@ class Server {
         this.app.use(this.ProductoPatch, require('../routes/product.routes'));
         this.app.use(this.categoriaPatch, require('../routes/category.routes'));
         this.app.use(this.UsuariosPatch, require('../routes/auth.routes'));
-
+        this.app.use(this.FtpPatch, require('../routes/ftp.routes'));
 
     }
 
