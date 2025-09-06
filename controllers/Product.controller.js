@@ -323,7 +323,7 @@ const cambiarEstado = async (req, res) => {
 
   const t = await sequelize.transaction();
 
-  try {
+  try { 
 
     // Paso 1: buscar el producto
     const producto = await productoSchema.findByPk(req.params.id);
