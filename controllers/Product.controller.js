@@ -6,7 +6,7 @@ const { Op } = require("sequelize");
 const { sequelize } = require('../config/db');
 
 const log = require('../logs');
-const crypto = require("crypto");
+const crypto = require("crypto"); 
 
 function objectIdLike() {
   return crypto.randomBytes(12).toString("hex");
@@ -159,8 +159,15 @@ const getProducts = async (req, res) => {
       p.old_price = parseFloat(p.old_price);
       p.weight = parseFloat(p.weight);
       return p;
-    }).sort((a, b) => a.category.localeCompare(b.category));
-    
+    }).sort((a, b) => {
+      // primero ordena por categoría
+      const categoryCompare = a.parent_category.localeCompare(b.parent_category);
+      if (categoryCompare !== 0) {
+        return categoryCompare;
+      }
+      // si la categoría es la misma, ordena por order_quantity
+      return a.order_quantity - b.order_quantity;
+    });
 
     res.json(response);
 

@@ -18,6 +18,7 @@ class Server {
         this.categoriaPatch = '/api/categories';
         this.UsuariosPatch = '/api/auth';
         this.FtpPatch = '/api/ftp';
+        this.CorreoPatch = '/api/Correo';
 
         // ConectarBD
         this.concetarBD();
@@ -75,6 +76,7 @@ class Server {
         this.app.use(this.categoriaPatch, require('../routes/category.routes'));
         this.app.use(this.UsuariosPatch, require('../routes/auth.routes'));
         this.app.use(this.FtpPatch, require('../routes/ftp.routes'));
+        this.app.use(this.CorreoPatch, require('../routes/correo.routes'));
 
     }
 

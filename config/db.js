@@ -2,9 +2,16 @@ const { Sequelize } = require("sequelize");
 
 
 //BD - USR -PWD
-const sequelize = new Sequelize('enervymc_bivvo', 'enervymc_bivvo', 'xvVDTkEF7nET3f7zry4U', {
+// const sequelize = new Sequelize('enervymc_bivvo', 'enervymc_bivvo', 'xvVDTkEF7nET3f7zry4U', {
 
-    host:'201.148.107.153',
+//     host:'201.148.107.153',
+//     dialect:'mysql'
+// });
+
+
+const sequelize = new Sequelize('brunella_bivvo', 'brunella_bivvo', 'kV70!9QMTOlM', {
+
+    host:'201.148.104.66',
     dialect:'mysql'
 });
 
